@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Ипотечный Калькулятор</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #00D9FF, #FF6B9D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .refresh-button {
+            background: linear-gradient(135deg, #00D9FF, #FF6B9D);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 16px;
+            transition: transform 0.2s;
+        }
+
+        .refresh-button:hover {
+            transform: scale(1.05);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 217, 255, 0.2);
+        }
+
+        .stat-label {
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #00D9FF;
+        }
+
+        .stat-subtext {
+            color: #64748b;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .events-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .event-name {
+            font-weight: 600;
+            color: #00D9FF;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .event-properties {
+            font-size: 13px;
+            color: #94a3b8;
+            background: #1e293b;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-item {
+            background: #0f172a;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+        }
+
+        .chart-label {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .chart-bar {
+            background: linear-gradient(90deg, #00D9FF, #FF6B9D);
+            height: 24px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #64748b;
+            font-size: 18px;
+        }
+
+        .error {
+            background: #991b1b;
+            color: #fecaca;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: #065f46;
+            color: #6ee7b7;
+        }
+
+        .badge-info {
+            background: #1e3a8a;
+            color: #93c5fd;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Analytics Dashboard</h1>
+            <p class="subtitle">Аналитика Telegram Mini App - Ипотечный Калькулятор</p>
+            <button class="refresh-button" onclick="loadDashboard()">🔄 Обновить данные</button>
+        </div>
+
+        <div id="error-container"></div>
+        <div id="loading" class="loading">Загрузка данных...</div>
+        <div id="dashboard" style="display: none;">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Всего сессий</div>
+                    <div class="stat-value" id="totalSessions">-</div>
+                    <div class="stat-subtext">Уникальных открытий приложения</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Всего событий</div>
+                    <div class="stat-value" id="totalEvents">-</div>
+                    <div class="stat-subtext">Действий пользователей</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Уникальные пользователи</div>
+                    <div class="stat-value" id="uniqueUsers">-</div>
+                    <div class="stat-subtext">Разных людей использовали приложение</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Расчётов выполнено</div>
+                    <div class="stat-value" id="totalCalculations">-</div>
+                    <div class="stat-subtext">Раз изменены параметры</div>
+                </div>
+            </div>
+
+            <!-- Events by Type -->
+            <div class="section">
+                <div class="section-title">📈 События по типам</div>
+                <div class="chart-container" id="eventsByType"></div>
+            </div>
+
+            <!-- Calculation Stats -->
+            <div class="section">
+                <div class="section-title">💰 Статистика расчётов</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Средняя стоимость</div>
+                        <div class="stat-value" id="avgPrice" style="font-size: 24px;">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Средняя ставка</div>
+                        <div class="stat-value" id="avgRate" style="font-size: 24px;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Events -->
+            <div class="section">
+                <div class="section-title">
+                    🕐 Последние события
+                    <span class="badge badge-info" id="recentCount">0</span>
+                </div>
+                <div class="events-list" id="recentEvents"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api'
+            : '/api'; // Замените на ваш production URL
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `
+                <div class="error">
+                    ⚠️ ${message}
+                </div>
+            `;
+        }
+
+        function hideError() {
+            document.getElementById('error-container').innerHTML = '';
+        }
+
+        async function loadDashboard() {
+            try {
+                hideError();
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'none';
+
+                // Загружаем дашборд
+                const dashboardResponse = await fetch(`${API_BASE}/dashboard`);
+                if (!dashboardResponse.ok) throw new Error('Не удалось загрузить дашборд');
+                const dashboard = await dashboardResponse.json();
+
+                // Загружаем последние события
+                const eventsResponse = await fetch(`${API_BASE}/events/recent?limit=20`);
+                if (!eventsResponse.ok) throw new Error('Не удалось загрузить события');
+                const eventsData = await eventsResponse.json();
+
+                // Обновляем основные метрики
+                document.getElementById('totalSessions').textContent = formatNumber(dashboard.total_sessions);
+                document.getElementById('totalEvents').textContent = formatNumber(dashboard.total_events);
+                document.getElementById('uniqueUsers').textContent = formatNumber(dashboard.unique_users);
+                document.getElementById('totalCalculations').textContent = formatNumber(dashboard.calculations.total);
+
+                // Средние значения
+                document.getElementById('avgPrice').textContent = formatNumber(dashboard.calculations.avg_price) + ' ₽';
+                document.getElementById('avgRate').textContent = dashboard.calculations.avg_rate + '%';
+
+                // События по типам
+                const eventsByTypeContainer = document.getElementById('eventsByType');
+                eventsByTypeContainer.innerHTML = '';
+                const maxEvents = Math.max(...Object.values(dashboard.events_by_type));
+                
+                Object.entries(dashboard.events_by_type)
+                    .sort((a, b) => b[1] - a[1])
+                    .forEach(([type, count]) => {
+                        const percentage = (count / maxEvents) * 100;
+                        eventsByTypeContainer.innerHTML += `
+                            <div class="chart-item">
+                                <div class="chart-label">${type}</div>
+                                <div class="chart-bar" style="width: ${percentage}%;">
+                                    ${count}
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                // Последние события
+                const recentEventsContainer = document.getElementById('recentEvents');
+                recentEventsContainer.innerHTML = '';
+                document.getElementById('recentCount').textContent = eventsData.count;
+
+                eventsData.events.forEach(session => {
+                    session.events.forEach(event => {
+                        const properties = Object.entries(event.properties)
+                            .filter(([key]) => !['page_url', 'referrer'].includes(key))
+                            .map(([key, value]) => `${key}: ${typeof value === 'number' ? formatNumber(value) : value}`)
+                            .join(', ');
+
+                        recentEventsContainer.innerHTML += `
+                            <div class="event-item">
+                                <div class="event-header">
+                                    <span class="event-name">${event.event_name}</span>
+                                    <span class="event-time">${formatDate(event.timestamp)}</span>
+                                </div>
+                                <div>User ID: ${session.user_id || 'Anonymous'}</div>
+                                ${properties ? `<div class="event-properties">${properties}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                });
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showError('Ошибка загрузки данных. Убедитесь, что сервер запущен на ' + API_BASE);
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+
+        // Initial load
+        loadDashboard();
+    </script>
+</body>
+</html>

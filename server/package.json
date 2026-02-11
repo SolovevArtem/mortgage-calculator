@@ -1,0 +1,29 @@
+{
+  "name": "mortgage-calculator-analytics",
+  "version": "1.0.0",
+  "description": "Analytics server for Telegram Mini App - Mortgage Calculator",
+  "main": "analytics-server.js",
+  "scripts": {
+    "start": "node analytics-server.js",
+    "dev": "nodemon analytics-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "analytics",
+    "telegram",
+    "mini-app",
+    "mortgage-calculator"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

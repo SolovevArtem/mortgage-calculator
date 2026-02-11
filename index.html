@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ипотечный Калькулятор</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0A0E27;
+            --bg-secondary: #151B3D;
+            --bg-card: #1C2447;
+            --accent-primary: #00D9FF;
+            --accent-secondary: #FF6B9D;
+            --accent-tertiary: #FFD93D;
+            --text-primary: #FFFFFF;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --border-color: rgba(0, 217, 255, 0.2);
+            --shadow-glow: 0 0 30px rgba(0, 217, 255, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 107, 157, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 217, 61, 0.05) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(5%, 5%) rotate(180deg); }
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 20px 16px 100px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.6s ease;
+            animation-fill-mode: both;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card:nth-child(2) { animation-delay: 0.1s; }
+        .card:nth-child(3) { animation-delay: 0.2s; }
+        .card:nth-child(4) { animation-delay: 0.3s; }
+        .card:nth-child(5) { animation-delay: 0.4s; }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .input-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .input-label span {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            outline: none;
+            position: relative;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0, 217, 255, 0.6);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb:active {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(0, 217, 255, 0.6);
+        }
+
+        .input-hints {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(255, 107, 157, 0.1));
+            border: 2px solid var(--accent-primary);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .result-main {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 16px 0;
+        }
+
+        .result-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .result-currency {
+            font-size: 24px;
+            margin-left: 4px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .result-item {
+            background: var(--bg-secondary);
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .result-item-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .result-item-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .result-item-value small {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--text-primary);
+            font-family: 'Manrope', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 24px rgba(0, 217, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .action-button:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .action-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 217, 255, 0.2);
+        }
+
+        .disclaimer {
+            text-align: center;
+            margin-top: 24px;
+            padding: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Analytics Badge */
+        .analytics-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 10px;
+            color: var(--text-muted);
+            z-index: 1000;
+            animation: fadeIn 1s ease 2s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .analytics-badge span {
+            color: var(--accent-primary);
+            font-weight: 700;
+        }
+
+        @media (max-width: 380px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .result-value {
+                font-size: 40px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .analytics-badge {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Ипотечный<br>Калькулятор</h1>
+            <p>Рассчитайте ваш ежемесячный платёж</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <div class="input-label">
+                    <span>Стоимость недвижимости</span>
+                    <span class="input-value" id="priceValue">5 000 000 ₽</span>
+                </div>
+                <input type="range" min="1000000" max="30000000" value="5000000" step="100000" class="slider" id="price">
+                <div class="input-hints">
+                    <span>1M ₽</span>
+                    <span>30M ₽</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <div class="input-label">
+                    <span>Первоначальный взнос</span>
+                    <span class="input-value" id="downPaymentValue">1 000 000 ₽</span>
+                </div>
+                <input type="range" min="0" max="10000000" value="1000000" step="50000" class="slider" id="downPayment">
+                <div class="input-hints">
+                    <span>0 ₽</span>
+                    <span>10M ₽</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <div class="input-label">
+                    <span>Срок кредита</span>
+                    <span class="input-value" id="termValue">15 лет</span>
+                </div>
+                <input type="range" min="1" max="30" value="15" step="1" class="slider" id="term">
+                <div class="input-hints">
+                    <span>1 год</span>
+                    <span>30 лет</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <div class="input-label">
+                    <span>Процентная ставка</span>
+                    <span class="input-value" id="rateValue">12.0%</span>
+                </div>
+                <input type="range" min="5" max="25" value="12" step="0.1" class="slider" id="rate">
+                <div class="input-hints">
+                    <span>5%</span>
+                    <span>25%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card result-card">
+            <div class="result-main">
+                <div class="result-label">Ежемесячный платёж</div>
+                <div class="result-value">
+                    <span id="monthlyPayment">48 049</span><span class="result-currency">₽</span>
+                </div>
+            </div>
+            
+            <div class="result-grid">
+                <div class="result-item">
+                    <div class="result-item-label">Сумма кредита</div>
+                    <div class="result-item-value">
+                        <span id="loanAmount">4.0</span> <small>млн ₽</small>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <div class="result-item-label">Переплата</div>
+                    <div class="result-item-value">
+                        <span id="overpayment">4.65</span> <small>млн ₽</small>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <div class="result-item-label">Общая сумма</div>
+                    <div class="result-item-value">
+                        <span id="totalAmount">8.65</span> <small>млн ₽</small>
+                    </div>
+                </div>
+                <div class="result-item">
+                    <div class="result-item-label">Срок</div>
+                    <div class="result-item-value">
+                        <span id="termMonths">180</span> <small>месяцев</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="action-button" id="shareButton">
+            Поделиться расчётом
+        </button>
+
+        <div class="disclaimer">
+            Расчёт является ориентировочным. Точные условия уточняйте в банке.
+        </div>
+    </div>
+
+    <div class="analytics-badge">
+        📊 Событий: <span id="eventCounter">0</span>
+    </div>
+
+    <script>
+        // ============================================
+        // ANALYTICS SYSTEM
+        // ============================================
+        
+        class Analytics {
+            constructor() {
+                this.sessionId = this.generateSessionId();
+                this.userId = null;
+                this.startTime = Date.now();
+                this.events = [];
+                this.apiEndpoint = 'YOUR_ANALYTICS_ENDPOINT'; // Замените на ваш endpoint
+                this.eventCounter = 0;
+                
+                this.init();
+            }
+
+            generateSessionId() {
+                return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            init() {
+                // Получаем данные пользователя из Telegram
+                if (window.Telegram && window.Telegram.WebApp) {
+                    const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                    if (tgUser) {
+                        this.userId = tgUser.id;
+                        this.userInfo = {
+                            id: tgUser.id,
+                            first_name: tgUser.first_name,
+                            last_name: tgUser.last_name,
+                            username: tgUser.username,
+                            language_code: tgUser.language_code
+                        };
+                    }
+                }
+
+                // Отправляем событие открытия приложения
+                this.trackEvent('app_opened', {
+                    platform: this.getPlatform(),
+                    screen_width: window.innerWidth,
+                    screen_height: window.innerHeight,
+                    user_agent: navigator.userAgent
+                });
+
+                // Отслеживаем закрытие приложения
+                window.addEventListener('beforeunload', () => {
+                    this.trackEvent('app_closed', {
+                        session_duration: Date.now() - this.startTime,
+                        total_events: this.events.length
+                    });
+                    this.flush();
+                });
+
+                // Автоматическая отправка событий каждые 30 секунд
+                setInterval(() => this.flush(), 30000);
+            }
+
+            getPlatform() {
+                const ua = navigator.userAgent;
+                if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+                if (ua.includes('Android')) return 'Android';
+                if (ua.includes('Windows')) return 'Windows';
+                if (ua.includes('Mac')) return 'macOS';
+                return 'Unknown';
+            }
+
+            trackEvent(eventName, properties = {}) {
+                const event = {
+                    event_name: eventName,
+                    timestamp: new Date().toISOString(),
+                    session_id: this.sessionId,
+                    user_id: this.userId,
+                    properties: {
+                        ...properties,
+                        page_url: window.location.href,
+                        referrer: document.referrer
+                    }
+                };
+
+                this.events.push(event);
+                this.eventCounter++;
+                
+                // Обновляем счётчик в UI
+                const counter = document.getElementById('eventCounter');
+                if (counter) {
+                    counter.textContent = this.eventCounter;
+                }
+
+                // Логируем в консоль для отладки
+                console.log('📊 Analytics Event:', eventName, properties);
+
+                // Отправляем в Telegram Analytics (если доступно)
+                if (window.Telegram && window.Telegram.WebApp) {
+                    try {
+                        window.Telegram.WebApp.sendData(JSON.stringify({
+                            type: 'analytics',
+                            event: eventName,
+                            properties: properties
+                        }));
+                    } catch (e) {
+                        console.log('Telegram sendData not available');
+                    }
+                }
+
+                // Если накопилось много событий, отправляем
+                if (this.events.length >= 10) {
+                    this.flush();
+                }
+            }
+
+            async flush() {
+                if (this.events.length === 0) return;
+
+                const payload = {
+                    session_id: this.sessionId,
+                    user_id: this.userId,
+                    user_info: this.userInfo,
+                    events: [...this.events]
+                };
+
+                // Логируем в консоль (для разработки)
+                console.log('📤 Sending analytics:', payload);
+
+                // Сохраняем в localStorage для бэкапа
+                try {
+                    const stored = JSON.parse(localStorage.getItem('analytics_backup') || '[]');
+                    stored.push(...this.events);
+                    localStorage.setItem('analytics_backup', JSON.stringify(stored.slice(-100)));
+                } catch (e) {
+                    console.error('Failed to save analytics backup:', e);
+                }
+
+                // Отправляем на сервер
+                try {
+                    // Раскомментируйте когда у вас будет настроен endpoint
+                    /*
+                    await fetch(this.apiEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    */
+                    
+                    // Очищаем отправленные события
+                    this.events = [];
+                } catch (error) {
+                    console.error('Failed to send analytics:', error);
+                }
+            }
+
+            // Специальные методы для отслеживания
+            trackSliderChange(sliderName, value) {
+                this.trackEvent('slider_changed', {
+                    slider: sliderName,
+                    value: value
+                });
+            }
+
+            trackCalculation(params) {
+                this.trackEvent('calculation_performed', params);
+            }
+
+            trackShare(method) {
+                this.trackEvent('share_clicked', {
+                    method: method
+                });
+            }
+
+            trackTimeSpent(section, seconds) {
+                this.trackEvent('time_spent', {
+                    section: section,
+                    duration_seconds: seconds
+                });
+            }
+        }
+
+        // Инициализация аналитики
+        const analytics = new Analytics();
+
+        // ============================================
+        // MORTGAGE CALCULATOR
+        // ============================================
+        
+        // Telegram WebApp initialization
+        let tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        // Elements
+        const priceSlider = document.getElementById('price');
+        const downPaymentSlider = document.getElementById('downPayment');
+        const termSlider = document.getElementById('term');
+        const rateSlider = document.getElementById('rate');
+
+        const priceValue = document.getElementById('priceValue');
+        const downPaymentValue = document.getElementById('downPaymentValue');
+        const termValue = document.getElementById('termValue');
+        const rateValue = document.getElementById('rateValue');
+
+        const monthlyPaymentEl = document.getElementById('monthlyPayment');
+        const loanAmountEl = document.getElementById('loanAmount');
+        const overpaymentEl = document.getElementById('overpayment');
+        const totalAmountEl = document.getElementById('totalAmount');
+        const termMonthsEl = document.getElementById('termMonths');
+
+        const shareButton = document.getElementById('shareButton');
+
+        // Tracking variables
+        let lastInteractionTime = Date.now();
+        let calculationCount = 0;
+
+        // Format number
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        }
+
+        // Calculate mortgage
+        function calculateMortgage() {
+            calculationCount++;
+            
+            const price = parseFloat(priceSlider.value);
+            const downPayment = parseFloat(downPaymentSlider.value);
+            const termYears = parseFloat(termSlider.value);
+            const rate = parseFloat(rateSlider.value);
+
+            // Update display values
+            priceValue.textContent = formatNumber(price) + ' ₽';
+            downPaymentValue.textContent = formatNumber(downPayment) + ' ₽';
+            termValue.textContent = termYears + (termYears === 1 ? ' год' : termYears < 5 ? ' года' : ' лет');
+            rateValue.textContent = rate.toFixed(1) + '%';
+
+            // Calculate loan
+            const loanAmount = price - downPayment;
+            const monthlyRate = rate / 100 / 12;
+            const termMonths = termYears * 12;
+
+            let monthlyPayment;
+            if (monthlyRate === 0) {
+                monthlyPayment = loanAmount / termMonths;
+            } else {
+                monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / 
+                                (Math.pow(1 + monthlyRate, termMonths) - 1);
+            }
+
+            const totalAmount = monthlyPayment * termMonths;
+            const overpayment = totalAmount - loanAmount;
+
+            // Update results
+            monthlyPaymentEl.textContent = formatNumber(Math.round(monthlyPayment));
+            loanAmountEl.textContent = (loanAmount / 1000000).toFixed(1);
+            overpaymentEl.textContent = (overpayment / 1000000).toFixed(2);
+            totalAmountEl.textContent = (totalAmount / 1000000).toFixed(2);
+            termMonthsEl.textContent = termMonths;
+
+            // Analytics
+            analytics.trackCalculation({
+                price: price,
+                down_payment: downPayment,
+                term_years: termYears,
+                rate: rate,
+                monthly_payment: Math.round(monthlyPayment),
+                overpayment: Math.round(overpayment),
+                calculation_number: calculationCount
+            });
+
+            // Haptic feedback
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+
+            lastInteractionTime = Date.now();
+        }
+
+        // Event listeners with analytics
+        priceSlider.addEventListener('input', (e) => {
+            calculateMortgage();
+            analytics.trackSliderChange('price', e.target.value);
+        });
+
+        downPaymentSlider.addEventListener('input', (e) => {
+            calculateMortgage();
+            analytics.trackSliderChange('down_payment', e.target.value);
+        });
+
+        termSlider.addEventListener('input', (e) => {
+            calculateMortgage();
+            analytics.trackSliderChange('term', e.target.value);
+        });
+
+        rateSlider.addEventListener('input', (e) => {
+            calculateMortgage();
+            analytics.trackSliderChange('rate', e.target.value);
+        });
+
+        // Share button with analytics
+        shareButton.addEventListener('click', () => {
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            const price = parseFloat(priceSlider.value);
+            const downPayment = parseFloat(downPaymentSlider.value);
+            const termYears = parseFloat(termSlider.value);
+            const rate = parseFloat(rateSlider.value);
+            const monthlyPayment = monthlyPaymentEl.textContent;
+
+            const message = `💰 Расчёт ипотеки:\n\n` +
+                          `🏠 Стоимость: ${formatNumber(price)} ₽\n` +
+                          `💵 Первый взнос: ${formatNumber(downPayment)} ₽\n` +
+                          `📅 Срок: ${termYears} ${termYears === 1 ? 'год' : termYears < 5 ? 'года' : 'лет'}\n` +
+                          `📊 Ставка: ${rate.toFixed(1)}%\n\n` +
+                          `✅ Платёж: ${monthlyPayment} ₽/мес`;
+
+            // Try to use Telegram sharing
+            if (tg.openTelegramLink) {
+                const shareUrl = `https://t.me/share/url?url=${encodeURIComponent('https://t.me/your_bot')}&text=${encodeURIComponent(message)}`;
+                tg.openTelegramLink(shareUrl);
+                analytics.trackShare('telegram');
+            } else if (navigator.share) {
+                navigator.share({
+                    title: 'Расчёт ипотеки',
+                    text: message
+                });
+                analytics.trackShare('native');
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(message).then(() => {
+                    tg.showAlert('Расчёт скопирован в буфер обмена!');
+                    analytics.trackShare('clipboard');
+                });
+            }
+        });
+
+        // Track time spent in app
+        setInterval(() => {
+            const timeSpent = Math.floor((Date.now() - lastInteractionTime) / 1000);
+            if (timeSpent < 300) { // Только если пользователь активен (< 5 минут без действий)
+                analytics.trackTimeSpent('calculator', timeSpent);
+            }
+        }, 60000); // Каждую минуту
+
+        // Initial calculation
+        calculateMortgage();
+
+        // Theme handling
+        if (tg.colorScheme === 'dark') {
+            document.documentElement.style.setProperty('--bg-primary', '#0A0E27');
+        }
+
+        // Export analytics data (для отладки)
+        window.getAnalyticsData = () => {
+            return {
+                session: analytics.sessionId,
+                user: analytics.userId,
+                events: analytics.events,
+                backup: JSON.parse(localStorage.getItem('analytics_backup') || '[]')
+            };
+        };
+    </script>
+</body>
+</html>
